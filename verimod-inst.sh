@@ -63,6 +63,8 @@ make test
 make install
 cd ..
 
+exit 
+
 cd pgpmoose-2.00
 perl Makefile.PL
 make
