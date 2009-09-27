@@ -9,11 +9,13 @@ wget --version ||
   yum install wget
 
 su -s /bin/bash news -c /usr/lib/news/bin/innd --verison ||
-  yum install inn
+  yum install inn ; \
+  wget ftp://ftp.isc.org/usenet/CONFIG/active.gz ; \
+  zcat active.gz | grep ^news\\. >> /var/lib/news/active
 
-wget ftp://ftp.isc.org/usenet/CONFIG/active.gz
+alpine -v ||
+  yum install alpine
 
-zcat active.gz | grep ^news\\. >> /var/lib/news/active
 
 perl -e "use Mail::Mbox::MessageParser;" || 
   yum install perl-Mail-Mbox-MessageParser
@@ -22,6 +24,9 @@ perl -e "use CPAN;" ||
 
 mkdir /tmp/verimod
 cd /tmp/verimod
+
+perl -e "use YAML;" ||
+  perl -MCPAN -e "install YAML"
 
 perl -e "use MIME::Lite;" || 
   perl -MCPAN -e "install MIME::Lite"
