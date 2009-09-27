@@ -5,6 +5,16 @@ useradd nanas
 cd ~
 rm -rf /tmp/verimod
 
+wget --version ||
+  yum install wget
+
+su -s /bin/bash news -c /usr/lib/news/bin/innd --verison ||
+  yum install inn
+
+wget ftp://ftp.isc.org/usenet/CONFIG/active.gz
+
+zcat active.gz | grep ^news\\. >> /var/lib/news/active
+
 perl -e "use Mail::Mbox::MessageParser;" || 
   yum install perl-Mail-Mbox-MessageParser
 perl -e "use CPAN;" || 
