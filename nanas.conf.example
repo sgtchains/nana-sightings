@@ -1,0 +1,408 @@
+###############################################################################
+### news.admin.net-abuse.sightings Moderation 'Bot, with News::Verimod      ###
+### Copyright 1996-2008, Tim Skirvin.  Redistribution terms are below.      ###
+###############################################################################
+use vars qw( $VERSION $CLASS %GROUP );
+$VERSION = '$Id: nanas.conf,v 1.3 2008-01-18 19:38:39 tskirvin Exp $';
+
+## Name of the class below that we will be loading from our ModBot programs.
+$CLASS = "News::Verimod::NANAS";
+
+## Group variables
+%GROUP = %News::Verimod::NANAS::GROUP;
+
+###############################################################################
+### News::Verimod::NANAS Variables ############################################
+###############################################################################
+package News::Verimod::NANAS;
+use vars qw( @FIXES @SCORES @CMDS %GROUP %REPORT %REASON );
+$VERSION = "1.99.90";
+
+## Primary group information
+BEGIN { use vars qw ( %REPORT %GROUP %OPTS );
+
+  ## Basic News::Verimod object information - must be filled out!
+  %GROUP = 	(
+
+    ## What is the name of the newsgroup we are moderating?  
+    'NEWSGROUP'	=> 'news.admin.net-abuse.sightings',	
+  
+    ## What is the submission address for this group?
+    'SUBMIT' 	=> 'nanas@mod.example.com',
+    
+    ## What is the contact address for this group?
+    'CONTACT'	=> 'nanas-req@mod.example.com',		
+   
+    ## What are we calling the actual moderation 'bot?
+    'BOTNAME'	=> "Bob the NANAS ModBot",		
+    
+    ## Who is the maintainer of the moderation 'bot?
+    'MAINTAINER'=> 'tskirvin@mod.example.com',		
+    
+    ## What is the mailing list for all of the moderators?
+    'MODLIST'	=> 'nanas-req@mod.example.com',	
+    
+    ## Is there a filename that contains a signature to attach to admin 
+    ## documents and such?
+    'SIGNATURE'	=> '~/.verimod/nanas/nanas.sig',		
+    
+    ## Where should we leave logging information?
+    'LOGDIR'	=> '~/.verimod/nanas',			
+
+    ## Where should queued messages go?
+    'QUEUEDIR'  => "~/.verimod/nanas/queue",
+	 		  ); 
+
+  ## Options to pass into process(), used to customize behavior.  Should 
+  ## document all of these options somewhere.
+
+  %OPTS = (
+        'nouserconfirm'         =>      0,      # Don't send user confirmations
+        'nouserreject'          =>      0,      # Don't send user rejections
+        'nomodconfirm'          =>      0,      # Don't send moderator notices
+          );       
+}
+
+
+## Modules to load to fix and lethally test the article 
+@FIXES = ( 
+        'xtrace',
+        'mailpath',
+        'mailtonews' => [ $GROUP{'NEWSGROUP'} ],
+        'newsgroups' => [ $GROUP{'NEWSGROUP'} ],
+        'header',
+        'bodyheaders',
+        'modbot'    => [ 'News::Verimod::NANAS' ],
+        'nanas',
+        'crosspost',
+        'blacklist',
+        'noconfirm',
+        'noreject',
+        'anykeyword',
+        'clean',
+        'signature',
+        # 'spamheader',                   # Drop spam headers
+        'mailtonews2',                  # Additional header drops
+	   );
+
+## Modules to score the article, so that we can decide what to do with it.
+@SCORES = (
+        'always',                       # Sample, mostly; lets us set a default
+          );
+
+###############################################################################
+### main() ####################################################################
+###############################################################################
+
+use strict;
+use News::Verimod;
+use News::Verimod::Sample qw( process_approve_by_default );
+
+use vars qw( @ISA );
+@ISA = qw( News::Verimod News::Verimod::Sample );
+
+###############################################################################
+### Functions and Documentation ###############################################
+###############################################################################
+
+=head1 NAME
+
+News::Verimod::NANAS - Verimod framework for news.admin.net-abuse.sightings
+
+=head1 SYNOPSIS
+
+See News::Verimod; invoked through battloid.
+
+=head1 DESCRIPTION
+
+This package offers a centralized framework for managing the newsgroup
+news.admin.net-abuse.sightings.  Messages are run through this script, and are
+either approved or rejected; there is no scoring, and because the group is
+fairly simple, there aren't too many checks to worry about.
+
+=head2 Verimod Article Checks/Fixes
+
+=over 4
+
+=item Fixes
+
+The following fixes are applied to all articles.
+
+=over 2
+
+=item mailtonews
+
+Remove/edit lots of mail headers to make a useful news article header set.
+
+=item modbot
+
+Adds X-Submissions-To and X-ModBot headers.
+
+=item spamheader
+
+Parses and deletes X-Spam headers, added by spam filters along the way.
+
+=item header
+
+Allows for headers to be modified; in this case, sets the following
+headers:
+
+  Newsgroups: news.admin.net-abuse.sightings
+  Followup-to: comp.std.misc
+  X-Moderation-Software: http://www.killfile.org/~tskirvin/software/verimod/
+  X-Group-Homepage: http://www.killfile.org/~nanas/
+
+=item clean
+
+Clean the headers so that they are RFC-compliant and consistent, tossing 
+out those that can't be saved. 
+
+=item mailtonews2
+
+Additional header drops.  
+
+=back
+
+=item Scores
+
+No scoring is actually implemented, though it is still enabled for debugging
+purposes.
+
+=item Processing
+
+Messages are enqueued by default.
+
+=back
+
+=head1 USAGE
+
+The following functions and variables are defined by this module.
+
+=head2 News::Verimod Functions 
+
+=over 4
+
+=head2 News::Verimod Functions
+
+=over 4
+
+=item fixes ( )
+
+=item commands ( )
+
+=item score_list ( )
+
+=item score_cmds ( )
+
+Internal functions used by battloid to decide how to fix/score the message.
+
+=cut
+
+sub fixes      { @FIXES }
+sub commands   { if (scalar @CMDS) { return @CMDS } 
+                 else { push @CMDS, <DATA>; chomp @CMDS; ( @CMDS ) } }
+sub score_list { @SCORES }
+sub score_cmds { commands(@_) }
+
+=item groupinfo ( )
+
+Returns a hashref containing all of the basic information used to create the
+group - ie, offers convenient access to the main variables.
+
+=cut
+
+sub groupinfo  { \%GROUP }
+
+=item groupopts ( )
+
+Returns the information regarding the %OPTS hash.  If invoked as a scalar,
+returns a hashref; returns the hash itself otherwise.  Returns an empty 
+hashref/array if %OPTS is not set, for some reason.
+
+=cut
+
+sub groupopts { \%OPTS ? wantarray ? %OPTS : \%OPTS
+                       : wantarray ? () : {} }
+
+=item approve ( OPTIONS )
+
+Taken from B<News::Verimod::Sample>'s approve().
+
+=cut
+
+=item reject ( OPTIONS )
+
+Taken from B<News::Verimod::Sample>'s reject().
+
+=cut
+
+=item enqueue ( OPTIONS )
+
+Taken from B<News::Verimod::Sample>'s enqueue().
+
+=cut
+
+sub approve { News::Verimod::Sample::approve(@_) }
+sub reject  { News::Verimod::Sample::reject(@_)  }
+sub enqueue { News::Verimod::Sample::enqueue(@_)  }
+
+=item process ( OPTIONS )
+
+Approves messages by default.  Will not send confirmations at all if the 
+user doesn't want them (normally, we'd mail them to the moderator).
+
+=cut
+
+sub process { 
+  my ($self, %options) = @_;
+  my $article = $options{'article'} || $$self->article or return 'no article';
+
+  $options{'nouserconfirm'} = "yes" if $article->header('x-no-confirm');
+  $options{'nouserreject'}  = "yes" if $article->header('x-no-reject');
+  $self->process_approve_by_default(%options) 
+}
+
+=back
+
+=cut
+
+#########################################################################
+### News::Gateway Additional Configuration ##############################
+#########################################################################
+
+package News::Gateway;
+use strict; use vars qw( %HOOKS %REPORT );
+
+=item nanas_mesg ()
+
+A News::Gateway post modification that does two things: if followups are set
+to news.admin.net-abuse.email or .usenet, then we will add a subject tag of
+[email] or [usenet] as appropriate; if not, and there is a subject tag that 
+tips us in the right direction, then we'll set followups.
+
+=cut
+
+sub nanas_mesg {
+  my ($self) = @_;
+  my $article = $self->article;
+  return "No article" unless $article;
+  
+  my $subj = $article->header('subject');
+  return "No subject" unless $subj;
+
+  my $follow = $article->header('followup-to') || ""; 
+  
+  if ( $follow ) {
+    if      ($follow =~ /news.admin.net-abuse.email/) { 
+      $subj = "[email] $subj" unless $subj =~ /\[email\] /;
+    } elsif ($follow =~ /news.admin.net-abuse.usenet/) {
+      $subj = "[usenet] $subj" unless $subj =~ /\[usenet\] /;
+    } 
+    $article->set_headers('subject', $subj);
+  } else { 
+    my @keywords = $self->keywords($subj);
+    my %set;
+    foreach my $word (@keywords) { 
+      if      ($word =~ /(e?[- ]?mail|phish|worm)/i) { 
+        $set{'news.admin.net-abuse.email'}++;
+      } elsif ($word =~ /news|usenet/i) { 
+        $set{'news.admin.net-abuse.usenet'}++;
+      } elsif ($word =~ /icq|chat|irc|misc|virus|relay|proxy|ssh|aim|scam/i) {
+        $set{'news.admin.net-abuse.misc'}++;
+      }
+    }
+    if (scalar keys %set) { 
+      $article->set_headers('followup-to', join(',', keys %set)) 
+    }
+  }
+
+  $article->set_headers('x-no-reject', 'auto-nanas') 
+                unless $article->header('followup-to');
+  
+  return undef;
+}
+
+$REPORT{'nanas'} = join("\n", <<ENDL);
+Followups and/or subject keyword not set to appropriate group.
+ENDL
+
+$News::Gateway::HOOKS{'nanas'} = [];
+
+1;
+
+=head1 NOTES
+
+Documentation is still dodgy, but at least the group works now.
+
+=head1 REQUIREMENTS
+
+B<News::Verimod>, B<News::Gateway>
+
+=head1 SEE ALSO
+
+B<News::Verimod>, B<News::Gateway>, B<News::Article>
+
+=head1 TODO
+
+Actually distribute the code.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@killfile.org>
+
+=head1 HOMEPAGE
+
+B<http://www.killfile.org/~tskirvin/nana/>
+B<http://www.killfile.org/~tskirvin/software/verimod/>
+
+=head1 LICENSE
+
+This code may be redistributed under the same terms as Perl itself.
+
+=head1 COPYRIGHT 
+
+Copyright 1995-2007 by Tim Skirvin <tskirvin@example.com>
+
+=cut
+
+package News::Verimod::NANAS;
+
+1;
+
+###############################################################################
+##### Version History #########################################################
+###############################################################################
+# 1.99.50               Fri 09 Mar 09:23:36 CST 2007    tskirvin
+### Updating config file for use as an example for other 'bots.
+# 1.99.90               Fri 18 Jan 11:37:26 PST 2008    tskirvin
+### Should pretty much replace the old configuration now.  
+
+__DATA__
+###############################################################################
+### news.admin.net-abuse.sightings configuration directives ###################
+###############################################################################
+
+## Header adjustments that aren't taken care of by other modules.
+header	ifempty x-group-homepage "http://www.example.com/~user/directory/"
+header  ifempty x-moderation-software "http://www.killfile.org/~tskirvin/software/verimod/"
+
+bodyheaders     "x-no-archive" "x-no-confirm" "x-no-reject"
+clean           maxrefs 10
+clean           hostname news.example.com
+clean           mid_prefix nanas.
+newsgroups      accept ~/.verimod/nanas/newsgroups /.*/
+newsgroups      group news.admin.net-abuse.sightings
+
+crosspost       crosspost max 1
+crosspost       followups max 1
+crosspost       newsgroups accept ~/.verimod/nanas/newsgroups /.*/
+crosspost       followups  accept ~/.verimod/nanas/followups /.*/
+crosspost       followups  restrict 3 news.admin.net-abuse.sightings
+
+blacklist       blacklist_from          ~/.verimod/nanas/blacklist-from
+blacklist       blacklist_subject       ~/.verimod/nanas/blacklist-subject
+
+noconfirm       ~/.verimod/nanas/noconfirm
+noreject        ~/.verimod/nanas/noreject
+
+signature       ~/.verimod/nanas/nanas.sig

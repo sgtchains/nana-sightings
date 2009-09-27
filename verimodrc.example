@@ -1,0 +1,10 @@
+$CONFIG{'news.admin.net-abuse.sightings'}  = '~/.verimod/nanas.conf';
+
+## Default environment variables; defaults for all groups
+$DEFAULT{'LOOP'}        = 'staff@example.com';
+$DEFAULT{'HOSTNAME'}    = 'news.example.com';
+$DEFAULT{'MESSAGELOG'}  = '~/.verimod/messagelog';
+$DEFAULT{'PGPMOOSERC'}  = '~/.verimod/pgpmooserc';
+$DEFAULT{'MAINTAINER'}  = 'nanas-req@lists.example.com';
+$DEFAULT{'CACHEDIR'}    = '~/.verimod/cache';
+$DEFAULT{'NNTPSERVER'}  = 'news.example.com';

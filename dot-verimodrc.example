@@ -1,0 +1,20 @@
+#!/bin/bash
+
+## What newsgroup are we running here?
+GROUP="news.admin.net-abuse.sightings"
+
+## Where is the program we're running?
+BATTLOID=/usr/local/bin/battloid2 
+
+## Where are we looking for cached articles?
+DIR=$HOME/cache
+
+## What is the program we're running to process the articles?
+PROG="$HOME/bin/nanas"
+
+## Where should we put our logs?
+LOG="$HOME/verimod.log";
+
+## What news server are we posting to?
+NNTPSERVER=localhost
+export NNTPSERVER

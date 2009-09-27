@@ -1,0 +1,16 @@
+diff -uh News-Archive-0.14.5.orig/Makefile.PL News-Archive-0.14.5/Makefile.PL
+--- News-Archive-0.14.5.orig/Makefile.PL	2004-05-25 14:44:36.000000000 -0500
++++ News-Archive-0.14.5/Makefile.PL	2009-08-23 10:33:54.634333807 -0500
+@@ -4,8 +4,10 @@
+ 
+ my $modules = {};  my $man3page = {};
+ foreach my $module ( 
+-   	qw( News::Archive News::Active News::Active::Entry 
+-	    News::GroupInfo News::GroupInfo::Entry News::Article::Mbox ) ) {
++   	qw( News::Archive News::Active::Entry News::Active News::Queue 
++            News::Queue::Entry  News::GroupInfo News::GroupInfo::Entry 
++            News::Article::Mbox News::Lock) ) {
++
+   my $file = $module;
+      $file =~ s/::/\//g;  
+      $file =~ s/$/.pm/;
